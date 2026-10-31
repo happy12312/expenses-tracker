@@ -140,6 +140,7 @@ export default function InputScreen() {
           onChangeText={setNote}
           placeholder="Комментарий"
           placeholderTextColor={colors.textSecondary}
+          multiline
           style={[styles.noteInput, { color: colors.text, borderColor: colors.backgroundElement }]}
           onBlur={() => {
             if (!note) setNoteExpanded(false);
@@ -186,6 +187,9 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.two,
     paddingVertical: Spacing.two,
     paddingHorizontal: Spacing.three,
+    minHeight: 40,
+    maxHeight: 100,
+    textAlignVertical: 'top',
     borderWidth: 1,
     borderRadius: Spacing.two,
     fontSize: 15,
