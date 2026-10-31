@@ -20,7 +20,9 @@ jobs:
         run: |
           WORKSPACE=$(find ios -maxdepth 1 -name "*.xcworkspace" | head -n 1)
           echo "workspace=$WORKSPACE" >> "$GITHUB_OUTPUT"
-          SCHEME=$(xcodebuild -workspace "$WORKSPACE" -list -json | python3 -c "import sys,json; print(json.load(sys.stdin)['workspace']['schemes'][0])")
+          # Схема приложения называется как главный .xcodeproj (не Pods.xcodeproj,
+          # и не схемы отдельных библиотек CocoaPods типа boost).
+          SCHEME=$(find ios -maxdepth 1 -name "*.xcodeproj" ! -name "Pods.xcodeproj" -exec basename {} .xcodeproj \; | head -n 1)
           echo "scheme=$SCHEME" >> "$GITHUB_OUTPUT"
           echo "Workspace: $WORKSPACE"
           echo "Scheme: $SCHEME"
