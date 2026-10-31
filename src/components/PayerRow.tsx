@@ -18,6 +18,7 @@ export default function PayerRow({
   return (
     <ScrollView
       horizontal
+      style={styles.scroll}
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={styles.row}>
       {payers.map((p) => {
@@ -43,9 +44,14 @@ export default function PayerRow({
 }
 
 const styles = StyleSheet.create({
+  scroll: {
+    flexGrow: 0,
+    height: 52,
+  },
   row: {
     gap: Spacing.two,
     paddingHorizontal: Spacing.three,
+    alignItems: 'center',
   },
   pill: {
     paddingHorizontal: Spacing.three,
