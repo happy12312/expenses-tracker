@@ -25,12 +25,17 @@ class MockDb implements MigrationExecutor {
     if (/PRAGMA user_version/i.test(sql)) {
       return { user_version: this.version } as unknown as T;
     }
-    const countMatch = sql.match(/SELECT COUNT\(\*\) as c FROM (\w+)/i);
-    if (countMatch) {
-      const rows = this.tables[countMatch[1]] ?? [];
-      return { c: rows.length } as unknown as T;
-    }
     return null;
+  }
+
+  async getAllAsync<T>(sql: string): Promise<T[]> {
+    const selectMatch = sql.match(/SELECT name FROM (\w+)/i);
+    if (selectMatch) {
+      const rows = this.tables[selectMatch[1]] ?? [];
+      // params передавались как [name, sort_order]
+      return rows.map((r: unknown[]) => ({ name: r[0] })) as unknown as T[];
+    }
+    return [];
   }
 
   async runAsync(sql: string, params: unknown[] = []): Promise<unknown> {

@@ -24,6 +24,20 @@ export async function listCategories(db: SQLiteDatabase, includeHidden = false):
   return db.getAllAsync<CategoryRow>(sql);
 }
 
+// Для экрана ввода: частые плитки наверху, при равной частоте — вручную заданный порядок.
+export async function listCategoriesByUsage(db: SQLiteDatabase): Promise<CategoryRow[]> {
+  return db.getAllAsync<CategoryRow>(
+    "SELECT * FROM categories WHERE hidden = 0 ORDER BY use_count DESC, sort_order ASC"
+  );
+}
+
+export async function decrementCategoryUse(db: SQLiteDatabase, categoryId: number): Promise<void> {
+  await db.runAsync(
+    "UPDATE categories SET use_count = MAX(0, use_count - 1) WHERE id = ?",
+    [categoryId]
+  );
+}
+
 export async function listPayers(db: SQLiteDatabase, includeHidden = false): Promise<PayerRow[]> {
   const sql = includeHidden
     ? "SELECT * FROM payers ORDER BY sort_order ASC"
