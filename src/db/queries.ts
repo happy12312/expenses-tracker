@@ -95,3 +95,101 @@ export async function listExpensesInRange(
 export async function listAllExpenses(db: SQLiteDatabase): Promise<ExpenseRow[]> {
   return db.getAllAsync<ExpenseRow>("SELECT * FROM expenses ORDER BY created_at DESC");
 }
+
+/* ---- справочники: настройки ---- */
+
+export async function addCategory(db: SQLiteDatabase, name: string): Promise<void> {
+  const row = await db.getFirstAsync<{ m: number }>(
+    "SELECT COALESCE(MAX(sort_order), -1) as m FROM categories"
+  );
+  await db.runAsync("INSERT INTO categories (name, sort_order) VALUES (?, ?)", [
+    name,
+    (row?.m ?? -1) + 1,
+  ]);
+}
+
+export async function renameCategory(db: SQLiteDatabase, id: number, name: string): Promise<void> {
+  await db.runAsync("UPDATE categories SET name = ? WHERE id = ?", [name, id]);
+}
+
+export async function setCategoryHidden(db: SQLiteDatabase, id: number, hidden: boolean): Promise<void> {
+  await db.runAsync("UPDATE categories SET hidden = ? WHERE id = ?", [hidden ? 1 : 0, id]);
+}
+
+export async function swapCategoryOrder(db: SQLiteDatabase, idA: number, idB: number): Promise<void> {
+  const rows = await db.getAllAsync<{ id: number; sort_order: number }>(
+    "SELECT id, sort_order FROM categories WHERE id IN (?, ?)",
+    [idA, idB]
+  );
+  if (rows.length !== 2) return;
+  await db.runAsync("UPDATE categories SET sort_order = ? WHERE id = ?", [rows[1].sort_order, rows[0].id]);
+  await db.runAsync("UPDATE categories SET sort_order = ? WHERE id = ?", [rows[0].sort_order, rows[1].id]);
+}
+
+export async function addPayer(db: SQLiteDatabase, name: string): Promise<void> {
+  const row = await db.getFirstAsync<{ m: number }>(
+    "SELECT COALESCE(MAX(sort_order), -1) as m FROM payers"
+  );
+  await db.runAsync("INSERT INTO payers (name, sort_order) VALUES (?, ?)", [name, (row?.m ?? -1) + 1]);
+}
+
+export async function renamePayer(db: SQLiteDatabase, id: number, name: string): Promise<void> {
+  await db.runAsync("UPDATE payers SET name = ? WHERE id = ?", [name, id]);
+}
+
+export async function setPayerHidden(db: SQLiteDatabase, id: number, hidden: boolean): Promise<void> {
+  await db.runAsync("UPDATE payers SET hidden = ? WHERE id = ?", [hidden ? 1 : 0, id]);
+}
+
+export async function swapPayerOrder(db: SQLiteDatabase, idA: number, idB: number): Promise<void> {
+  const rows = await db.getAllAsync<{ id: number; sort_order: number }>(
+    "SELECT id, sort_order FROM payers WHERE id IN (?, ?)",
+    [idA, idB]
+  );
+  if (rows.length !== 2) return;
+  await db.runAsync("UPDATE payers SET sort_order = ? WHERE id = ?", [rows[1].sort_order, rows[0].id]);
+  await db.runAsync("UPDATE payers SET sort_order = ? WHERE id = ?", [rows[0].sort_order, rows[1].id]);
+}
+
+/* ---- бэкап: экспорт / импорт ---- */
+
+export interface BackupData {
+  categories: CategoryRow[];
+  payers: PayerRow[];
+  expenses: ExpenseRow[];
+}
+
+export async function exportAllData(db: SQLiteDatabase): Promise<BackupData> {
+  const [categories, payers, expenses] = await Promise.all([
+    db.getAllAsync<CategoryRow>("SELECT * FROM categories ORDER BY sort_order"),
+    db.getAllAsync<PayerRow>("SELECT * FROM payers ORDER BY sort_order"),
+    db.getAllAsync<ExpenseRow>("SELECT * FROM expenses ORDER BY created_at"),
+  ]);
+  return { categories, payers, expenses };
+}
+
+// Полностью заменяет текущие данные содержимым бэкапа, сохраняя исходные id
+// (на них ссылаются category_id/payer_id у трат).
+export async function restoreAllData(db: SQLiteDatabase, data: BackupData): Promise<void> {
+  await db.execAsync("DELETE FROM expenses; DELETE FROM categories; DELETE FROM payers;");
+  for (const c of data.categories) {
+    await db.runAsync(
+      "INSERT INTO categories (id, name, sort_order, use_count, hidden) VALUES (?, ?, ?, ?, ?)",
+      [c.id, c.name, c.sort_order, c.use_count, c.hidden]
+    );
+  }
+  for (const p of data.payers) {
+    await db.runAsync("INSERT INTO payers (id, name, sort_order, hidden) VALUES (?, ?, ?, ?)", [
+      p.id,
+      p.name,
+      p.sort_order,
+      p.hidden,
+    ]);
+  }
+  for (const e of data.expenses) {
+    await db.runAsync(
+      "INSERT INTO expenses (id, amount, category_id, payer_id, note, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+      [e.id, e.amount, e.category_id, e.payer_id, e.note ?? null, e.created_at]
+    );
+  }
+}
