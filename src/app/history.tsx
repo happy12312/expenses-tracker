@@ -17,7 +17,7 @@ import {
   listPayers,
   updateExpense,
 } from '@/db/queries';
-import { ExpenseRow } from '@/logic/aggregate';
+import { ExpenseRow, filterByPayer } from '@/logic/aggregate';
 import { formatDayLabel } from '@/logic/format';
 
 const IOS_TAB_BAR_HEIGHT = 49;
@@ -50,6 +50,7 @@ export default function HistoryScreen() {
   const [categories, setCategories] = useState<CategoryRow[]>([]);
   const [payers, setPayers] = useState<PayerRow[]>([]);
   const [editing, setEditing] = useState<ExpenseRow | null>(null);
+  const [payerFilter, setPayerFilter] = useState<number | null>(null);
 
   const load = useCallback(async () => {
     const db = await getDb();
@@ -92,11 +93,39 @@ export default function HistoryScreen() {
     [editing, load]
   );
 
-  const sections = groupByDay(expenses);
+  const filteredExpenses = filterByPayer(expenses, payerFilter);
+  const sections = groupByDay(filteredExpenses);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top }]}>
       <Text style={[styles.heading, { color: colors.text }]}>История</Text>
+
+      <View style={styles.payerFilterRow}>
+        <Pressable
+          onPress={() => setPayerFilter(null)}
+          style={[
+            styles.pill,
+            { backgroundColor: payerFilter === null ? colors.accent : colors.backgroundElement },
+          ]}>
+          <Text style={{ color: payerFilter === null ? '#fff' : colors.text, fontWeight: '600' }}>
+            Все
+          </Text>
+        </Pressable>
+        {payers.map((p) => (
+          <Pressable
+            key={p.id}
+            onPress={() => setPayerFilter(p.id)}
+            style={[
+              styles.pill,
+              { backgroundColor: payerFilter === p.id ? colors.accent : colors.backgroundElement },
+            ]}>
+            <Text style={{ color: payerFilter === p.id ? '#fff' : colors.text, fontWeight: '600' }}>
+              {p.name}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+
       <SectionList
         sections={sections}
         keyExtractor={(item) => String(item.id)}
@@ -153,6 +182,18 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
+  },
+  payerFilterRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.two,
+    paddingHorizontal: Spacing.three,
+    paddingBottom: Spacing.two,
+  },
+  pill: {
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.one + 2,
+    borderRadius: 16,
   },
   sectionHeader: {
     fontSize: 13,

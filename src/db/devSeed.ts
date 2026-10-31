@@ -21,6 +21,7 @@ const AMOUNT_RANGES: Record<string, [number, number]> = {
 };
 
 const SAMPLE_NOTES = ["с коллегами", "срочно понадобилось", "на районе", "давно хотел", ""];
+const DEV_SEED_TAG = "[демо]";
 
 function randomInt(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -32,7 +33,13 @@ function randomAmount(categoryName: string): number {
 }
 
 export async function seedSampleExpensesIfEmpty(db: SQLiteDatabase): Promise<void> {
-  const existing = await db.getFirstAsync<{ c: number }>("SELECT COUNT(*) as c FROM expenses");
+  // Метим демо-записи тегом в комментарии и проверяем именно по нему, а не по
+  // общему количеству трат — иначе после того, как появятся настоящие траты,
+  // демо-набор больше никогда не добавится.
+  const existing = await db.getFirstAsync<{ c: number }>(
+    "SELECT COUNT(*) as c FROM expenses WHERE note LIKE ?",
+    [`${DEV_SEED_TAG}%`]
+  );
   if ((existing?.c ?? 0) > 0) return;
 
   const categories = await listCategories(db);
@@ -53,13 +60,14 @@ export async function seedSampleExpensesIfEmpty(db: SQLiteDatabase): Promise<voi
       createdAt.setDate(now.getDate() - dayOffset);
       createdAt.setHours(hour, minute, 0, 0);
 
-      const note = SAMPLE_NOTES[randomInt(0, SAMPLE_NOTES.length - 1)];
+      const sampleNote = SAMPLE_NOTES[randomInt(0, SAMPLE_NOTES.length - 1)];
+      const note = sampleNote ? `${DEV_SEED_TAG} ${sampleNote}` : DEV_SEED_TAG;
 
       await addExpense(db, {
         amount: randomAmount(category.name),
         categoryId: category.id,
         payerId: payer.id,
-        note: note || undefined,
+        note,
         createdAt,
       });
     }
