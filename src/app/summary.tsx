@@ -193,6 +193,20 @@ export default function SummaryScreen() {
             </Pressable>
           ))}
         </View>
+
+        <Text style={[styles.listHeading, { color: colors.text }]}>Все траты за период</Text>
+        <View style={styles.fullList}>
+          {filtered.map((e) => (
+            <ExpenseListRow
+              key={e.id}
+              categoryName={categoryName(e.category_id)}
+              payerName={payerName(e.payer_id)}
+              note={e.note}
+              amount={e.amount}
+              createdAt={e.created_at}
+            />
+          ))}
+        </View>
       </ScrollView>
 
       <Modal
@@ -310,6 +324,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
     paddingTop: Spacing.four,
     gap: Spacing.three,
+  },
+  listHeading: {
+    fontSize: 18,
+    fontWeight: '700',
+    paddingHorizontal: Spacing.three,
+    paddingTop: Spacing.five,
+    paddingBottom: Spacing.two,
+  },
+  fullList: {
+    paddingBottom: Spacing.three,
   },
   categoryRow: {
     gap: 4,
