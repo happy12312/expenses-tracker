@@ -25,21 +25,24 @@ jobs:
           echo "Workspace: $WORKSPACE"
           echo "Scheme: $SCHEME"
 
-      - name: Archive without signing
+      # "archive" без подписи не копирует .app в архив — поэтому делаем
+      # обычный build с явным derivedDataPath и берём готовый .app оттуда.
+      - name: Build without signing
         run: |
           xcodebuild -workspace "${{ steps.find.outputs.workspace }}" \
             -scheme "${{ steps.find.outputs.scheme }}" \
             -configuration Release -sdk iphoneos \
-            -archivePath build/app.xcarchive archive \
-            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=""
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            build
 
       - name: Pack ipa
         run: |
-          echo "=== Archive contents ==="
-          find build/app.xcarchive -maxdepth 4
-          APP_PATH=$(find build/app.xcarchive -name "*.app" -type d | head -n 1)
+          echo "=== Build products ==="
+          find build/Build/Products -maxdepth 2
+          APP_PATH=$(find build/Build/Products -name "*.app" -type d | head -n 1)
           if [ -z "$APP_PATH" ]; then
-            echo "No .app bundle found in archive"
+            echo "No .app bundle found in build products"
             exit 1
           fi
           echo "Found app at: $APP_PATH"
