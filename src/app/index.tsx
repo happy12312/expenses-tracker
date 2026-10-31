@@ -1,6 +1,6 @@
 import * as Haptics from 'expo-haptics';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View, useColorScheme } from 'react-native';
+import { Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useColorScheme } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import CategoryGrid from '@/components/CategoryGrid';
@@ -65,7 +65,6 @@ export default function InputScreen() {
     setNote('');
     setNoteExpanded(false);
     setPayerId(defaultPayerId);
-    amountInputRef.current?.focus();
   }, []);
 
   const handleAmountChange = useCallback((text: string) => {
@@ -80,6 +79,7 @@ export default function InputScreen() {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
         return;
       }
+      Keyboard.dismiss();
       const db = await getDb();
       const expenseId = await addExpense(db, {
         amount: value,
