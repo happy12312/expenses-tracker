@@ -29,6 +29,17 @@ export function formatTime(iso: string): string {
   return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
+const MONTHS_SHORT = [
+  "янв", "фев", "мар", "апр", "май", "июн",
+  "июл", "авг", "сен", "окт", "ноя", "дек",
+];
+
+/** Короткая абсолютная дата+время для строки траты: «4 ноя, 09:03». */
+export function formatShortDateTime(iso: string): string {
+  const d = parseLocalIsoDate(iso);
+  return `${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}, ${formatTime(iso)}`;
+}
+
 /** Заголовок группы дня в истории: «Сегодня», «Вчера» или «5 ноября». */
 export function formatDayLabel(iso: string, now: Date = new Date()): string {
   const d = parseLocalIsoDate(iso);

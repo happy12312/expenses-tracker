@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View, useColorScheme } from 'react-native';
 
 import { Colors, Spacing } from '@/constants/theme';
-import { formatTenge, formatTime } from '@/logic/format';
+import { formatShortDateTime, formatTenge } from '@/logic/format';
 
 export default function ExpenseListRow({
   categoryName,
@@ -22,36 +22,48 @@ export default function ExpenseListRow({
   return (
     <View style={styles.row}>
       <View style={styles.left}>
-        <Text style={[styles.title, { color: colors.text }]}>{categoryName}</Text>
-        <Text style={[styles.meta, { color: colors.textSecondary }]} numberOfLines={1}>
-          {formatTime(createdAt)} · {payerName}
-          {note ? ` · ${note}` : ''}
+        <View style={styles.topLine}>
+          <Text style={[styles.title, { color: colors.text }]}>{categoryName}</Text>
+          <Text style={[styles.amount, { color: colors.text }]}>−{formatTenge(amount)}</Text>
+        </View>
+        <Text style={[styles.meta, { color: colors.textSecondary }]}>
+          {formatShortDateTime(createdAt)} · {payerName}
         </Text>
+        {note ? (
+          <Text style={[styles.note, { color: colors.textSecondary }]} numberOfLines={2}>
+            {note}
+          </Text>
+        ) : null}
       </View>
-      <Text style={[styles.amount, { color: colors.text }]}>−{formatTenge(amount)}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   row: {
+    paddingVertical: Spacing.two + 2,
+    paddingHorizontal: Spacing.three,
+  },
+  left: {
+    gap: 2,
+  },
+  topLine: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: Spacing.two + 2,
-    paddingHorizontal: Spacing.three,
     gap: Spacing.two,
-  },
-  left: {
-    flexShrink: 1,
-    gap: 2,
   },
   title: {
     fontSize: 16,
     fontWeight: '600',
+    flexShrink: 1,
   },
   meta: {
     fontSize: 13,
+  },
+  note: {
+    fontSize: 13,
+    fontStyle: 'italic',
   },
   amount: {
     fontSize: 16,
