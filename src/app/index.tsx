@@ -27,7 +27,6 @@ export default function InputScreen() {
   const scheme = useColorScheme();
   const colors = Colors[scheme === 'dark' ? 'dark' : 'light'];
   const insets = useSafeAreaInsets();
-  const amountInputRef = useRef<TextInput>(null);
 
   const [ready, setReady] = useState(false);
   const [categories, setCategories] = useState<CategoryRow[]>([]);
@@ -121,7 +120,6 @@ export default function InputScreen() {
   return (
     <View style={[styles.flex, { backgroundColor: colors.background, paddingTop: insets.top }]}>
       <TextInput
-        ref={amountInputRef}
         autoFocus
         value={amount ? formatTenge(Number(amount)) : ''}
         onChangeText={handleAmountChange}

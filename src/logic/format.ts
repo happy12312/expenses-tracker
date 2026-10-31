@@ -10,3 +10,33 @@ export function formatPercent(part: number, total: number): string {
   if (total <= 0) return "0%";
   return `${Math.round((part / total) * 100)}%`;
 }
+
+const MONTHS_GENITIVE = [
+  "января", "февраля", "марта", "апреля", "мая", "июня",
+  "июля", "августа", "сентября", "октября", "ноября", "декабря",
+];
+
+function parseLocalIsoDate(iso: string): Date {
+  const [datePart, timePart] = iso.split("T");
+  const [y, m, d] = datePart.split("-").map(Number);
+  const [h = 0, mi = 0] = (timePart ?? "0:0").split(":").map(Number);
+  return new Date(y, m - 1, d, h, mi);
+}
+
+export function formatTime(iso: string): string {
+  const d = parseLocalIsoDate(iso);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+/** Заголовок группы дня в истории: «Сегодня», «Вчера» или «5 ноября». */
+export function formatDayLabel(iso: string, now: Date = new Date()): string {
+  const d = parseLocalIsoDate(iso);
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const target = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const diffDays = Math.round((today.getTime() - target.getTime()) / 86400000);
+  if (diffDays === 0) return "Сегодня";
+  if (diffDays === 1) return "Вчера";
+  const withYear = d.getFullYear() !== now.getFullYear() ? ` ${d.getFullYear()}` : "";
+  return `${d.getDate()} ${MONTHS_GENITIVE[d.getMonth()]}${withYear}`;
+}

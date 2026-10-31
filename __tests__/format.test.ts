@@ -1,4 +1,4 @@
-import { formatTenge, formatPercent } from "../src/logic/format";
+import { formatTenge, formatPercent, formatTime, formatDayLabel } from "../src/logic/format";
 
 describe("formatTenge", () => {
   it("маленькие суммы без пробелов", () => {
@@ -27,5 +27,28 @@ describe("formatPercent", () => {
   });
   it("100% когда part равен total", () => {
     expect(formatPercent(500, 500)).toBe("100%");
+  });
+});
+
+describe("formatTime", () => {
+  it("форматирует часы и минуты с ведущим нулём", () => {
+    expect(formatTime("2026-11-04T09:03:00")).toBe("09:03");
+  });
+});
+
+describe("formatDayLabel", () => {
+  const now = new Date(2026, 10, 4, 12, 0);
+
+  it("сегодня", () => {
+    expect(formatDayLabel("2026-11-04T08:00:00", now)).toBe("Сегодня");
+  });
+  it("вчера", () => {
+    expect(formatDayLabel("2026-11-03T23:59:00", now)).toBe("Вчера");
+  });
+  it("дата в этом году без года", () => {
+    expect(formatDayLabel("2026-10-20T10:00:00", now)).toBe("20 октября");
+  });
+  it("дата в другом году с годом", () => {
+    expect(formatDayLabel("2025-10-20T10:00:00", now)).toBe("20 октября 2025");
   });
 });

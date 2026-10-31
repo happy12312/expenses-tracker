@@ -92,6 +92,6 @@ export async function listExpensesInRange(
   );
 }
 
-export async function listExpensesByDay(db: SQLiteDatabase): Promise<ExpenseRow[]> {
+export async function listAllExpenses(db: SQLiteDatabase): Promise<ExpenseRow[]> {
   return db.getAllAsync<ExpenseRow>("SELECT * FROM expenses ORDER BY created_at DESC");
 }

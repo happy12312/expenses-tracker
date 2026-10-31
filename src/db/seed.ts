@@ -18,7 +18,9 @@ export const INITIAL_PAYERS: string[] = ["Я", "Даша"];
 
 export interface SeedExecutor {
   getAllAsync<T>(sql: string): Promise<T[]>;
-  runAsync(sql: string, params?: unknown[]): Promise<unknown>;
+  // any — реальный SQLiteDatabase.runAsync типизирован под конкретный union
+  // значений, который не стоит дублировать здесь ради тестового мока.
+  runAsync(sql: string, params: any[]): Promise<unknown>;
 }
 
 // Проверяем и добавляем каждое значение по отдельности (а не "если таблица

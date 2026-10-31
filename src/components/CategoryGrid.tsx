@@ -5,9 +5,11 @@ import type { CategoryRow } from '@/db/queries';
 
 export default function CategoryGrid({
   categories,
+  selectedId,
   onPick,
 }: {
   categories: CategoryRow[];
+  selectedId?: number | null;
   onPick: (category: CategoryRow) => void;
 }) {
   const scheme = useColorScheme();
@@ -15,21 +17,30 @@ export default function CategoryGrid({
 
   return (
     <View style={styles.grid}>
-      {categories.map((c) => (
-        <Pressable
-          key={c.id}
-          onPress={() => onPick(c)}
-          style={({ pressed }) => [
-            styles.tile,
-            {
-              backgroundColor: pressed ? colors.backgroundSelected : colors.backgroundElement,
-            },
-          ]}>
-          <Text style={[styles.label, { color: colors.text }]} numberOfLines={1}>
-            {c.name}
-          </Text>
-        </Pressable>
-      ))}
+      {categories.map((c) => {
+        const selected = c.id === selectedId;
+        return (
+          <Pressable
+            key={c.id}
+            onPress={() => onPick(c)}
+            style={({ pressed }) => [
+              styles.tile,
+              {
+                backgroundColor: selected
+                  ? colors.accent
+                  : pressed
+                    ? colors.backgroundSelected
+                    : colors.backgroundElement,
+              },
+            ]}>
+            <Text
+              style={[styles.label, { color: selected ? '#fff' : colors.text }]}
+              numberOfLines={1}>
+              {c.name}
+            </Text>
+          </Pressable>
+        );
+      })}
     </View>
   );
 }
