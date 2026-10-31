@@ -1,0 +1,45 @@
+name: build-ipa
+on: workflow_dispatch
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - run: npm ci
+
+      - run: npx expo prebuild --platform ios --clean
+
+      - name: Find workspace and scheme
+        id: find
+        run: |
+          WORKSPACE=$(find ios -maxdepth 1 -name "*.xcworkspace" | head -n 1)
+          echo "workspace=$WORKSPACE" >> "$GITHUB_OUTPUT"
+          SCHEME=$(xcodebuild -workspace "$WORKSPACE" -list -json | python3 -c "import sys,json; print(json.load(sys.stdin)['workspace']['schemes'][0])")
+          echo "scheme=$SCHEME" >> "$GITHUB_OUTPUT"
+          echo "Workspace: $WORKSPACE"
+          echo "Scheme: $SCHEME"
+
+      - name: Archive without signing
+        run: |
+          xcodebuild -workspace "${{ steps.find.outputs.workspace }}" \
+            -scheme "${{ steps.find.outputs.scheme }}" \
+            -configuration Release -sdk iphoneos \
+            -archivePath build/app.xcarchive archive \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=""
+
+      - name: Pack ipa
+        run: |
+          mkdir -p Payload
+          cp -R build/app.xcarchive/Products/Applications/*.app Payload/
+          zip -qr expenses.ipa Payload
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: expenses-ipa
+          path: expenses.ipa

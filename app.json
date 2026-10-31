@@ -8,7 +8,9 @@
     "scheme": "expensestracker",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "bundleIdentifier": "kz.dmitry.expenses",
+      "supportsTablet": false
     },
     "android": {
       "adaptiveIcon": {
