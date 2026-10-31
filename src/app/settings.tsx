@@ -23,6 +23,7 @@ import {
   setPayerHidden,
   swapCategoryOrder,
   swapPayerOrder,
+  wipeAllData,
 } from '@/db/queries';
 import { expensesToCsv } from '@/logic/csv';
 
@@ -133,6 +134,26 @@ export default function SettingsScreen() {
     }
   };
 
+  const handleWipeAll = () => {
+    Alert.alert(
+      'Удалить все данные?',
+      'Все траты будут удалены, справочники вернутся к значениям по умолчанию. Это разовая кнопка для перехода от тестовых данных к реальному использованию.',
+      [
+        { text: 'Отмена', style: 'cancel' },
+        {
+          text: 'Удалить всё',
+          style: 'destructive',
+          onPress: async () => {
+            const db = await getDb();
+            await wipeAllData(db);
+            await load();
+            Alert.alert('Готово', 'База очищена');
+          },
+        },
+      ]
+    );
+  };
+
   const handleImportJson = async () => {
     const result = await DocumentPicker.getDocumentAsync({ type: 'application/json' });
     if (result.canceled || !result.assets?.[0]) return;
@@ -224,6 +245,14 @@ export default function SettingsScreen() {
           <Text style={{ color: colors.danger }}>Импорт из JSON (заменит всё)</Text>
         </Pressable>
       </Section>
+
+      {__DEV__ ? (
+        <Section title="Разработка" colors={colors}>
+          <Pressable onPress={handleWipeAll} style={styles.actionRow}>
+            <Text style={{ color: colors.danger }}>Удалить все данные (разово)</Text>
+          </Pressable>
+        </Section>
+      ) : null}
     </ScrollView>
   );
 }

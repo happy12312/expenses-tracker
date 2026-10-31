@@ -1,6 +1,7 @@
 import type { SQLiteDatabase } from "expo-sqlite";
 import { ExpenseRow } from "../logic/aggregate";
 import { toLocalIso } from "../logic/period";
+import { seedIfEmpty } from "./seed";
 
 export interface CategoryRow {
   id: number;
@@ -94,6 +95,14 @@ export async function listExpensesInRange(
 
 export async function listAllExpenses(db: SQLiteDatabase): Promise<ExpenseRow[]> {
   return db.getAllAsync<ExpenseRow>("SELECT * FROM expenses ORDER BY created_at DESC");
+}
+
+// Полный сброс базы: все траты удаляются, справочники возвращаются к
+// начальному наполнению из ТЗ. Для разового использования при переходе
+// от тестирования к реальному вводу.
+export async function wipeAllData(db: SQLiteDatabase): Promise<void> {
+  await db.execAsync("DELETE FROM expenses; DELETE FROM categories; DELETE FROM payers;");
+  await seedIfEmpty(db);
 }
 
 /* ---- справочники: настройки ---- */
